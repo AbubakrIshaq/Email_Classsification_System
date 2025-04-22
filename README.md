@@ -61,17 +61,25 @@ __Response Format__
 
 json
 {
+
   "input_email_body": "string containing the email",
   "list_of_masked_entities":
+  
   [
+  
     {
+    
       "position": [start_index, end_index],
       "classification": "entity_type",
       "entity": "original_entity_value"
+   
     }
+  
   ],
+  
   "masked_email": "string containing the masked email",
   "category_of_the_email": "string containing the class"
+
 }
 
 ## Project Structure
