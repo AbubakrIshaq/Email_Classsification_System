@@ -11,26 +11,26 @@ This system classifies support emails into predefined categories while masking p
 ## Setup Instructions
 ## Local Development
 
-__1.Clone the repository:__
-git clone https://github.com/yourusername/email-classification.git
+__1. Clone the repository:__
+git clone https://github.com/yourusername/Email-Classification_System.git
 cd email-classification
 
-__2.Create a virtual environment and install dependencies:__
+__2. Create a virtual environment and install dependencies:__
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-__3.Download the SpaCy model:__
+__3. Download the SpaCy model:__
 python -m spacy download en_core_web_sm
 
-__4.Run the application:__
+__4. Run the application:__
 uvicorn app:app --reload
 
-__5.Access the API at http:__//localhost:8000
+__5. Access the API at http:__//localhost:8000
 
 ## Hugging Face Spaces Deployment
 
-1.Fork this repository to your GitHub account
+Fork this repository to your GitHub account
 2.Create a new Hugging Face Space:
 
 + Go to https://huggingface.co/spaces
