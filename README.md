@@ -47,6 +47,7 @@ Fork this repository to your GitHub account
 
 ## API Usage
 __Request Format__
+
 POST /classify-email
 Content-Type: application/json
 
@@ -55,6 +56,7 @@ Content-Type: application/json
 }
 
 __Response Format__
+
 json{
   "input_email_body": "string containing the email",
   "list_of_masked_entities": [
@@ -72,10 +74,15 @@ json{
 
 email-classification/
 ├── app.py              # Main FastAPI application
+
 ├── models.py           # Classification model implementation
+
 ├── utils.py            # PII masking and utility functions
+
 ├── api.py              # API endpoints
+
 ├── requirements.txt    # Dependencies
+
 └── README.md           # Setup instructions
 
 ## Implementation Details
