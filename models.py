@@ -1,123 +1,74 @@
-from typing import List, Dict, Any, Tuple
-import pickle
-import os
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
-import numpy as np
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import pickle
+import os
+import joblib
+from utils import load_dataset
 
-class EmailClassifier:
-    """Email classification model using ML techniques"""
-    
+class SpamClassifier:
     def __init__(self):
-        """Initialize the email classifier"""
-        # Define email categories
-        self.categories = [
-            "Billing Issues", 
-            "Technical Support", 
-            "Account Management",
-            "Product Inquiry",
-            "Return Request",
-            "Shipping Information"
-        ]
-        
-        # Create ML pipeline with TF-IDF and Random Forest
-        self.model = Pipeline([
-            ('tfidf', TfidfVectorizer(max_features=10000, ngram_range=(1, 2))),
-            ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))
+        self.pipeline = Pipeline([
+            ('tfidf', TfidfVectorizer(max_features=5000)),
+            ('classifier', MultinomialNB())
         ])
-        
-        # Check if model file exists, load if it does
-        if os.path.exists('email_classifier.pkl'):
-            self.load_model()
-        else:
-            # When no model exists, we'll train on first prediction call
-            self.is_trained = False
+        self.model_path = os.path.join(os.path.dirname(__file__), 'saved_models', 'spam_classifier.pkl')
     
-    def train(self, texts: List[str], labels: List[str]) -> None:
-        """
-        Train the classification model
+    def train(self, dataset_path, test_size=0.2, random_state=42):
+        """Train the model using the provided dataset"""
+        # Load and preprocess dataset
+        df = load_dataset(r'C:\Users\Ishaq\Downloads\combined_emails_with_natural_pii.csv')
         
-        Args:
-            texts: List of email texts (masked)
-            labels: List of corresponding category labels
-        """
-        # Train-test split
+        # Split data
         X_train, X_test, y_train, y_test = train_test_split(
-            texts, labels, test_size=0.2, random_state=42
+            df['processed_text'], 
+            df['label'], 
+            test_size=test_size, 
+            random_state=random_state
         )
         
         # Train the model
-        self.model.fit(X_train, y_train)
+        self.pipeline.fit(X_train, y_train)
         
-        # Evaluate the model
-        accuracy = self.model.score(X_test, y_test)
-        print(f"Model trained with accuracy: {accuracy:.4f}")
+        # Evaluate
+        y_pred = self.pipeline.predict(X_test)
+        accuracy = accuracy_score(y_test, y_pred)
+        report = classification_report(y_test, y_pred)
+        matrix = confusion_matrix(y_test, y_pred)
+        
+        print(f"Model Accuracy: {accuracy:.4f}")
+        print("\nClassification Report:")
+        print(report)
+        print("\nConfusion Matrix:")
+        print(matrix)
         
         # Save the model
-        self.save_model()
-        self.is_trained = True
+        os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
+        joblib.dump(self.pipeline, self.model_path)
+        print(f"Model saved to {self.model_path}")
+        
+        return accuracy
     
-    def predict(self, text: str) -> str:
-        """
-        Classify an email into one of the predefined categories
-        
-        Args:
-            text: Masked email text
-            
-        Returns:
-            Predicted category
-        """
-        # For demo purposes: if model is not trained, use dummy training data
-        if not hasattr(self, 'is_trained') or not self.is_trained:
-            self._train_dummy_data()
-        
+    def load_model(self):
+        """Load trained model from disk"""
+        if os.path.exists(self.model_path):
+            self.pipeline = joblib.load(self.model_path)
+            return True
+        return False
+    
+    def predict(self, text):
+        """Predict whether a text is spam or not"""
+        from utils import preprocess_text
+        # Preprocess the input text
+        processed_text = preprocess_text(text)
         # Make prediction
-        prediction = self.model.predict([text])[0]
-        return prediction
-    
-    def save_model(self) -> None:
-        """Save model to disk"""
-        with open('email_classifier.pkl', 'wb') as f:
-            pickle.dump(self.model, f)
-    
-    def load_model(self) -> None:
-        """Load model from disk"""
-        with open('email_classifier.pkl', 'rb') as f:
-            self.model = pickle.load(f)
-        self.is_trained = True
-    
-    def _train_dummy_data(self) -> None:
-        """Train model on dummy data when no real training data is available"""
-        dummy_texts = [
-            "I was charged twice for my subscription this month",
-            "My account shows the wrong billing information",
-            "Can you help me understand the charges on my invoice?",
-            "My app keeps crashing when I try to open it",
-            "I can't log in to my account, it says incorrect password",
-            "The website is very slow to load on my computer",
-            "How do I change my email address on my account?",
-            "I need to update my shipping address",
-            "Can you delete my account and all my data?",
-            "What are the specifications of your latest product?",
-            "Do you offer discounts for bulk orders?",
-            "Is this product compatible with my device?",
-            "I want to return the item I bought last week",
-            "The product arrived damaged, I need a replacement",
-            "What's your return policy?",
-            "When will my order be delivered?",
-            "Can I change my shipping address for my current order?",
-            "My package hasn't arrived yet, can you track it?"
-        ]
+        prediction = self.pipeline.predict([processed_text])[0]
+        probability = self.pipeline.predict_proba([processed_text])[0]
         
-        dummy_labels = [
-            "Billing Issues", "Billing Issues", "Billing Issues",
-            "Technical Support", "Technical Support", "Technical Support",
-            "Account Management", "Account Management", "Account Management",
-            "Product Inquiry", "Product Inquiry", "Product Inquiry",
-            "Return Request", "Return Request", "Return Request",
-            "Shipping Information", "Shipping Information", "Shipping Information"
-        ]
-        
-        self.train(dummy_texts, dummy_labels)
+        result = {
+            'is_spam': bool(prediction),
+            'confidence': float(probability[1]) if prediction == 1 else float(probability[0])
+        }
+        return result

@@ -1,6 +1,61 @@
+import pandas as pd
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
 import re
 import spacy # type: ignore
 from typing import Dict, List, Tuple, Any
+
+def preprocess_text(text):
+    """Clean and preprocess text data"""
+    if isinstance(text, str):
+        # Convert to lowercase
+        text = text.lower()
+        # Remove special characters and numbers
+        text = re.sub(r'[^a-zA-Z\s]', '', text)
+        # Remove extra whitespace
+        text = re.sub(r'\s+', ' ', text).strip()
+        
+        # Tokenize
+        tokens = text.split()
+        
+        # Remove stopwords
+        try:
+            stop_words = set(stopwords.words('english'))
+        except LookupError:
+            nltk.download('stopwords')
+            stop_words = set(stopwords.words('english'))
+        
+        tokens = [word for word in tokens if word not in stop_words]
+        
+        # Stemming
+        stemmer = PorterStemmer()
+        tokens = [stemmer.stem(word) for word in tokens]
+        
+        return ' '.join(tokens)
+    return ""
+
+def load_dataset(file_path):
+    """Load and preprocess the dataset"""
+    # Load dataset
+    df = pd.read_csv(file_path)
+    
+    # Check if expected columns exist
+    if 'text' not in df.columns or 'label' not in df.columns:
+        raise ValueError("Dataset must contain 'text' and 'label' columns")
+    
+    # Preprocess text
+    df['processed_text'] = df['text'].apply(preprocess_text)
+    
+    # Map labels to binary format (assuming 'spam' and 'ham' or similar labels)
+    if df['label'].dtype == 'object':
+        label_mapping = {'spam': 1, 'ham': 0}
+        df['label'] = df['label'].map(lambda x: label_mapping.get(x.lower(), 0) if isinstance(x, str) else x)
+    
+    return df
+
+
 
 # Load SpaCy NER model
 try:
