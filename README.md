@@ -52,14 +52,18 @@ POST /classify-email
 Content-Type: application/json
 
 {
+
   "email_body": "Your email text here..."
+
 }
 
 __Response Format__
 
-json{
+json
+{
   "input_email_body": "string containing the email",
-  "list_of_masked_entities": [
+  "list_of_masked_entities":
+  [
     {
       "position": [start_index, end_index],
       "classification": "entity_type",
@@ -73,6 +77,7 @@ json{
 ## Project Structure
 
 email-classification/
+
 ├── app.py              # Main FastAPI application
 
 ├── models.py           # Classification model implementation
