@@ -12,7 +12,7 @@ This system classifies support emails into predefined categories while masking p
 ## Local Development
 
 __1. Clone the repository:__
-git clone https://github.com/yourusername/Email-Classification_System.git
+git clone https://github.com/yourusername/Email_Classification_System.git
 cd email-classification
 
 __2. Create a virtual environment and install dependencies:__
